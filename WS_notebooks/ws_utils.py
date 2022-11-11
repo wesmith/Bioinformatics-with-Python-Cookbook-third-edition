@@ -12,3 +12,6 @@ def attrs(obj, skip=True, token='__'):
         attr.append(k)
     return attr
 
+
+def phred_to_percent_accurate(phred):
+    return 100 * (1. - 10**(-phred/10))
