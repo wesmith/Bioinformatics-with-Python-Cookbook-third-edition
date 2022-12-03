@@ -20,7 +20,6 @@ def phred_to_percent_accurate(phred):
     return 100 * (1. - 10**(-phred/10))
 
 
-# WS go thru all of the CDSs and extract the ones with the desired parent mRNA
 def get_child_of_parent(db, parent, feature):
     return list(db.children(parent, featuretype=feature))
 
