@@ -1,4 +1,4 @@
-# ws_utils.py
+# ws_gene_utils.py
 # WESmith 11/10/22, 12/02/22
 # tailored utility functions for bioinformatics
 
