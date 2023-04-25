@@ -9,6 +9,28 @@ from Bio import Seq, SeqIO
 import matplotlib.pyplot as plt
 
 
+# WS convenience function 04/24/23
+def print_dict(d, leader='', keywidth=8, indent=4, sep=3):
+    '''
+    Convenience function to print nested dicts.
+    d:        dictionary to print (dict)
+    leader:   optional initial identifying char or string for each line of output (str)
+    keywidth: presumed max text width of keys, so that they print right-aligned (int>0);
+    indent:   the indentation value for the next nested dict (int>0)
+    sep:      the separation from the key to the value (int>0)
+    '''
+    keywidthstr = str(int(keywidth))
+    txt = '{:>' + keywidthstr + '}:' # right-justify keys
+    sepstr    = ' ' * int(sep)
+    nextident = ' ' * int(indent)
+    for k, v in d.items():
+        if isinstance(v, dict):
+            print(leader + txt.format(k))
+            print_dict(v, leader=leader + nextident, keywidth=keywidth, indent=indent, sep=sep)
+        else:
+            print(leader + txt.format(str(k)) + sepstr + '{}'.format(v))
+
+
 def attrs(obj, skip=True, token='__'):
     '''
     Convenience function to print an objects attributes.
