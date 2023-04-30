@@ -305,8 +305,8 @@ class EntrezFetch():
             for k,v in j.items():
                 for kk in v:
                     if short:
-                        print('\nTITLE: {}\nJOURNAL: {}\nCIT: {}\n'.\
+                        print('\nTITLE: {}\nJOURNAL: {}\nCIT: {}'.\
                               format(kk['TI'], kk['JT'], kk['SO']))
                     else:
-                        print('\nTITLE: {}\nABSTRACT: {}\nJOURNAL: {}\nCIT: {}\n'.\
+                        print('\nTITLE: {}\nABSTRACT: {}\nJOURNAL: {}\nCIT: {}'.\
                               format(kk['TI'], kk['AB'], kk['JT'], kk['SO']))
