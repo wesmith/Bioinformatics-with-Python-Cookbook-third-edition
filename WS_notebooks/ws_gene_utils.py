@@ -1,11 +1,10 @@
 # ws_gene_utils.py
-# WESmith 11/10/22, 12/02/22
+# WESmith 11/10/22, 12/02/22, 04/29/23
 # tailored utility functions for bioinformatics
 
-
-from collections import defaultdict
+from   Bio import Seq, SeqIO, Entrez, Medline
+from   collections import defaultdict
 import gffutils
-from Bio import Seq, SeqIO
 import matplotlib.pyplot as plt
 
 
@@ -226,3 +225,88 @@ class PlotGFF():
         txt = 'GENE {}: {}'.format(self.gene_id, self.desc)
         axs.set_title(txt)
         plt.show()
+
+
+def print_feature_info(rec_list, short=True, keywidth=12):
+    for k in rec_list:
+        ff = defaultdict(list)
+        gg = defaultdict(int)
+        print('NAME: {} ID: {} [{}]  has {} features'.\
+              format(k.name, k.id, k.description, len(k.features)))
+        for j in k.features:
+            v = j.location
+            ff[j.type].append((int(v.start), int(v.end), int(v.strand)))
+            gg[j.type] += 1
+        if short:
+            print_dict(gg, keywidth=keywidth)
+        else:
+            print_dict(ff, keywidth=keywidth)
+        print()
+
+
+class EntrezFetch():
+    '''
+    WS convenience class to fetch data from Entrez databases.
+    id:      ID of object(s) to fetch (list of strings). 
+             If a single object, a list of one object is made internally.
+    db:      database type (str) (default: 'nucleotide')
+    rettype: return type (str) (default: 'gb')
+    email:   email address of requestor (str)(required)
+    '''
+    def __init__(self, id=id, db='nucleotide', rettype='gb', email=''):
+        if type(id) != list: id = [id]
+        self.id      = id
+        self.db      = db
+        self.rettype = rettype
+        self.email   = email
+        Entrez.email = self.email
+        self.info(db=self.db, rettype=self.rettype)
+        self.handle  = Entrez.efetch(db=self.db, 
+                                     id=self.id, 
+                                     rettype=self.rettype)
+        self.rec     = list(SeqIO.parse(self.handle, self.rettype))
+        self.refs    = None
+
+    def info(self, db='N/A', rettype='N/A', mode='N/A'):
+        print('GETTING DATA FROM {} DB OF TYPE {} AS MODE {} ...'.\
+                  format(db, rettype, mode))
+        
+    def references(self, db='pubmed', rettype='medline', retmode='text'):
+        '''
+        Get publications for each record
+        '''
+        if self.refs is not None:
+            return self.refs
+        else:
+            self.info(db=db, rettype=rettype, mode=retmode)
+            out = []
+            for j, rec in enumerate(self.rec):
+                try:
+                    rr = rec.annotations['references']
+                except:
+                    print('NO REFS FOR RECORD {}'.format(j))
+                    continue
+                for ref in rr:
+                    if ref.pubmed_id != '':
+                        #print('trying: ', [ref.pubmed_id])
+                        handle = Entrez.efetch(db=db, id=[ref.pubmed_id],
+                                               rettype=rettype, retmode=retmode)
+                        dd = list(Medline.parse(handle))  # make a list from the generator
+                        out.append({ref.pubmed_id: dd})
+            self.refs = out # a list of dictionaries: one dictionary for each record
+        return self.refs
+
+    def print_features(self, short=True, keywidth=12):
+        print_feature_info(self.rec, short=short, keywidth=keywidth)
+    
+    def print_refs(self, short=True):
+        _ = self.references()
+        for j in self.refs:
+            for k,v in j.items():
+                for kk in v:
+                    if short:
+                        print('\nTITLE: {}\nJOURNAL: {}\nCIT: {}\n'.\
+                              format(kk['TI'], kk['JT'], kk['SO']))
+                    else:
+                        print('\nTITLE: {}\nABSTRACT: {}\nJOURNAL: {}\nCIT: {}\n'.\
+                              format(kk['TI'], kk['AB'], kk['JT'], kk['SO']))
